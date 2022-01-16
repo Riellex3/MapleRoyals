@@ -517,7 +517,7 @@ async def hpwashing(ctx, job, level, mp, *argv):
     if job in accepted_strings_Warrior:
         minMP = level*4+156
         if job in accepted_strings_Warrior2:
-            minMP = level*4*56
+            minMP = level*4+56
         aprHPmin = 50
         aprHPmax = 55
         aprHP = 53
