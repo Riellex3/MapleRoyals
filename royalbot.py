@@ -10,19 +10,26 @@ import json
 import csv
 
 import math
-from datetime import date
+from datetime import date, datetime
 import discord
 from discord import channel
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
-from PIL import Image, ImageSequence, ImageDraw, ImageFont
+from PIL import Image, ImageSequence, ImageDraw, ImageFont, ImageOps
 from io import BytesIO
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
 
-
+eggeventreminder=['01:55','03:55','05:55','07:55','09:55','11:55','13:55','15:55','17:55','19:55','21:55','23:55']
+eggeventtimes=['00:00','02:00','04:00','06:00','08:00','10:00','12:00','14:00','16:00','18:00','20:00','22:00']
+slimeeventtimes=['00:00','04:00','08:00','12:00','16:00','20:00']
+slimeeventreminder = ['00:50','03:50','07:50','11:50','15:50','19:50']
+winterdashreminder=['01:50','05:50','09:50','13:50','17:50','21:50']
+winterdashtimes=['02:00','06:00','10:00','14:00','18:00','22:00']
+alleventtimes= []
+voteremindertimes=['12:00','23:00']
 # Enables intents for bot to detect members list
 # intents = discord.Intents.default()
 # intents.members = True
@@ -43,6 +50,30 @@ bossList = [['mano',3],['stumpy',3],['deo',3],['king_clang',3],['seruf',3],['fau
 
 
 
+############################### TESTING AREA ###########################################
+
+
+
+# Joke
+@bot.command(name = 'upcomingevent',help = '')
+async def upcomingevent(ctx):
+    embed = discord.Embed(color = discord.Colour.blue())
+    file1 = discord.File(dir_path+'/gotchu.gif', filename = 'gotchu.gif')
+    embed.set_thumbnail(url="attachment://gotchu.gif")
+    embed.title = 'APRIL FOOLS'
+    embed.description = 'From America!'
+    await ctx.send(embed=embed, file = file1)
+
+############################### TESTING AREA ###########################################
+
+
+
+
+
+
+
+
+
 #################################################################################### Discord Features
 # Author
 @bot.command(name='author', help='About the author')
@@ -53,13 +84,61 @@ async def author(ctx):
 
 @tasks.loop(seconds = 60)
 async def minutetimer():
-    serverTime=time.gmtime()
-    print(f'The current time is: {time.strftime("%H:%M:%S", serverTime)}')
+    serverTime = time.gmtime()
+    today = date.today()
+    # if time.strftime("%H:%M",serverTime) in eggeventreminder:
+    #     eventend = date(2022, 4, 28)
+    #     if today > eventend:
+    #         return
+    #     for guild in bot.guilds:
+    #         channel = discord.utils.get(guild.channels, name = 'bmu-alerts')
+    #         role = discord.utils.get(guild.roles, name = 'bmu-alerts' )
+    #         if channel in guild.channels:
+    #             if role in guild.roles:
+    #                 print(f'Printing reminder to: {guild} at {time.strftime("%H:%M", serverTime)}')
+    #                 await channel.send(f'{role.mention} Egg PQ will begin in 5 minutes!')
+    #                 await asyncio.sleep(70)
+    if time.strftime("%H:%M",serverTime) in winterdashreminder:
+        eventend = date(2023, 1, 19)
+        if today > eventend:
+            return
+        for guild in bot.guilds:
+            channel = discord.utils.get(guild.channels, name = 'bmu-alerts')
+            role = discord.utils.get(guild.roles, name = 'bmu-alerts' )
+            if channel in guild.channels:
+                if role in guild.roles:
+                    print(f'Printing reminder to: {guild} at {time.strftime("%H:%M", serverTime)}')
+                    await channel.send(f'{role.mention} Winter Dash will begin in 10 minutes!')
+                    await asyncio.sleep(70)
+    if time.strftime("%H:%M",serverTime) in slimeeventreminder:
+        eventend = date(2023, 3, 8)
+        if today > eventend:
+            return
+        for guild in bot.guilds:
+            channel = discord.utils.get(guild.channels, name = 'bmu-alerts')
+            role = discord.utils.get(guild.roles, name = 'bmu-alerts' )
+            if channel in guild.channels:
+                if role in guild.roles:
+                    print(f'Printing reminder to: {guild} at {time.strftime("%H:%M", serverTime)}')
+                    await channel.send(f'{role.mention} Slime will spawn in 10 minutes!')
+                    await asyncio.sleep(70)
+    if time.strftime("%H:%M",serverTime) in voteremindertimes:
+        for guild in bot.guilds:
+            channel = discord.utils.get(guild.channels, name = 'bmu-alerts')
+            role = discord.utils.get(guild.roles, name = 'bmu-vote-alerts' )
+            if channel in guild.channels:
+                if role in guild.roles:
+                    print(f'Printing vote reminder to: {guild} at {time.strftime("%H:%M", serverTime)}')
+                    await channel.send(f'{role.mention} don\'t forget to vote!\nhttps://mapleroyals.com/?page=vote')
+                    await asyncio.sleep(70)
+        
 
 @bot.event
 async def on_ready():
     minutetimer.start()
     print(f'Establishing connection in {len(bot.guilds)} guilds...')
+    for guild in bot.guilds:
+        print(guild.name)
     print('Bot is ready.')
     await bot.change_presence(activity=discord.Game(name='MapleRoyals'))
 
@@ -72,6 +151,8 @@ async def on_command_error(ctx, error):
     elif isinstance(error, commands.CommandNotFound):
         print(ctx)
         await ctx.send('Invalid command uwu. Please type \"~help\" for a list of available commands.')
+    elif isinstance(error, commands.CommandInvokeError):
+        return
     else:
         print(ctx)
         await ctx.send('Oops. Something went wrong.', delete_after=5)
@@ -140,6 +221,135 @@ async def noodle(ctx, user: discord.Member = None):
     frames[0].save('profile.gif', save_all=True, append_images=frames[1:], duration=100, loop=0)
     await ctx.send(file = discord.File("profile.gif"))
 
+@bot.command(name = 'pat', help = 'Pat the user')
+async def feed(ctx, user: discord.Member = None):
+    if user == None:
+        user = ctx.author
+
+    pat = Image.open('pat.gif')
+    asset = user.avatar_url_as(format='png', size = 256)
+    data = BytesIO(await asset.read())
+
+    pfp = Image.open(data)
+    pfp.thumbnail((128,128), Image.ANTIALIAS)
+    pfp.save('pfp.png')
+    pfp = Image.open('pfp.png')
+    pfp = pfp.resize((256,256), Image.ANTIALIAS)
+
+    count = 0
+    posx = 180
+    posy = 180
+    imx = 256
+    imy = 256
+    frames = []
+    for frame in ImageSequence.Iterator(pat):
+        frame = frame.copy()
+        frame=frame.convert('RGBA')
+        blankuse = Image.open('cloudstock.png')
+        blankuse.paste(pfp, (posx,posy))
+        blankuse.paste(frame, (0,0), frame)
+        
+        frames.append(blankuse)
+        count = count+1
+        if count == 1:
+            imx = imx + 40
+            posx = posx - 20
+            imy = imy - 20
+            posy = posy + 20
+        if count == 3:
+            imx = imx + 30
+            posx = posx - 15
+            imy = imy - 30
+            posy = posy + 30
+        if count == 5:
+            imx = imx - 10
+            posx = posx + 5
+            imy = imy + 20
+            posy = posy - 20
+        if count == 6:
+            imx = imx - 20
+            posx = posx + 10
+            imy = imy + 20
+            posy = posy - 20
+        pfp = pfp.resize((imx,imy), Image.ANTIALIAS)
+    frames[0].save('profile.gif', save_all=True, append_images=frames[1:], duration=50, loop=0)
+    await ctx.send(file = discord.File("profile.gif"))
+
+@bot.command(name = 'hyperpat', help = 'Hyperpat the user')
+async def feed(ctx, user: discord.Member = None):
+    if user == None:
+        user = ctx.author
+
+    pat = Image.open('pat.gif')
+    asset = user.avatar_url_as(format='png', size = 256)
+    data = BytesIO(await asset.read())
+
+    pfp = Image.open(data)
+    pfp.thumbnail((128,128), Image.ANTIALIAS)
+    pfp.save('pfp.png')
+    pfp = Image.open('pfp.png')
+    pfp = pfp.resize((256,256), Image.ANTIALIAS)
+
+    count = 0
+    posx = 180
+    posy = 180
+    imx = 256
+    imy = 256
+    frames = []
+    for frame in ImageSequence.Iterator(pat):
+        frame = frame.copy()
+        frame=frame.convert('RGBA')
+        blankuse = Image.open('cloudstock.png')
+        blankuse.paste(pfp, (posx,posy))
+        blankuse.paste(frame, (0,0), frame)
+        
+        frames.append(blankuse)
+        count = count+1
+        if count == 1:
+            imx = imx + 40
+            posx = posx - 20
+            imy = imy - 20
+            posy = posy + 20
+        if count == 3:
+            imx = imx + 30
+            posx = posx - 15
+            imy = imy - 30
+            posy = posy + 30
+        if count == 5:
+            imx = imx - 10
+            posx = posx + 5
+            imy = imy + 20
+            posy = posy - 20
+        if count == 6:
+            imx = imx - 20
+            posx = posx + 10
+            imy = imy + 20
+            posy = posy - 20
+        pfp = pfp.resize((imx,imy), Image.ANTIALIAS)
+    frames[0].save('profile.gif', save_all=True, append_images=frames[1:], duration=20, loop=0)
+    await ctx.send(file = discord.File("profile.gif"))
+
+# @bot.command(name = 'snap', help = 'Thanos snap!')
+# async def snap(ctx, user:discord.Member = None):
+#     if user == None:
+#         user = ctx.author
+#     message = random.choice([
+#         'You have been spared by Thanos.', 
+#         'I\'m sorry, but you survived this time.',
+#         'RNG has sided with you. You live this time',
+#         'Thanos didn\'t snap properly. You survive.',
+#         'Congratulations! You survive another day!',
+
+#         'You survived Thanos\'s snap, but Thanos decided to snap again. You die.'
+#         'You survived Thanos\'s snap, but you trip on a rock and die.',
+#         'RNG has sided against you. You die',
+#         'You die. You were killed by fate.',
+#         'You have been slain by Thanos, for the good of the Universe.',
+#         ])
+#     await ctx.send(file = discord.File(dir_path+'/thanos.gif'))
+#     await asyncio.sleep(4)
+#     await ctx.send(f'{user.mention}. {message}')
+
 @bot.command(name = 'slap', help = 'Slap!')
 async def slap(ctx, user:discord.Member = None):
     if user == None:
@@ -184,6 +394,7 @@ async def slap(ctx, user:discord.Member = None):
     frames[0].save('profile.gif', save_all=True, append_images=frames[1:], duration=40, loop=0)
     await ctx.send(file = discord.File('profile.gif'))
 
+
 # Display Area Boss Timers
 @bot.command(name='bosstimer', help = 'Displays Area Boss Timers')
 async def bosstimer(ctx):
@@ -210,6 +421,223 @@ async def bosstimer(ctx):
         
         try:
             reaction, user = await bot.wait_for('reaction_add', timeout = 30.0, check = check)
+            await message.remove_reaction(reaction, user)
+        except:
+            break
+
+    await message.clear_reactions() 
+
+@bot.command(name = 'thirdjobguide', help = 'Gives solution sets to the 3rd Job Holy Stone Questions')
+async def thirdjobguide(ctx):
+    embed1 = discord.Embed(color = discord.Colour.blue())
+    embed1.title = 'Third Job Guide'
+    embed1.description = '**Door of Dimension Locations**\nWarrior: [Ant Tunnel Park](https://bbb.hidden-street.net/map/mini-map/dungeon-ant-tunnel-park)\nBowman: [Sleepy Dungeon V](https://bbb.hidden-street.net/map/mini-map/dungeon-sleepy-dungeon-v)\nMagician: [Forest of Evil II](https://bbb.hidden-street.net/map/mini-map/hidden-street-forest-of-evil-ii)\nThief: [Monkey Swamp II](https://bbb.hidden-street.net/map/mini-map/hidden-street-monkey-swamp-ii)\nPirate: [Cave of Evil Eye II](https://bbb.hidden-street.net/map/mini-map/dungeon-cave-of-evil-eye-ii)\n\nThe following pages are common answer sets for the Holy Stone Questions'
+    embed2 = discord.Embed(color = discord.Colour.blue())
+    embed2.title = 'Set 1'
+    embed2.description = '1. What NPC will you NOT see in Ellinia? **- Roel**\n2. What monster will you NOT see in Ossyria? **- Croco**\n3. Octopus, Ribbon Pig, Green Mushroom, Axe Stump, Bubbling. Which monster has the highest level? **- Axe Stump**\n4. Which Potion <--> Effect is NOT correct? **- Sunrise Dew: Recover 3000 MP**\n5. Which NPC has nothing to do with pets? **- Vicious**'
+    embed3 = discord.Embed(color = discord.Colour.blue())
+    embed3.title = 'Set 2'
+    embed3.description = '1. Which NPC cannot be seen in Henesys? **- Teo**\n2. Which of the following monsters will not be seen in Maple Island? **- Evil Eye/Dark Stump**\n3. Which item do you give Maya in Henesys in order to cure her sickness? **- Weird Medicine**\n4. Which town is not in Victoria Island? **- Amherst or Southperry**\n5. Which of these monsters will you NOT see at Ant Tunnel and Center Dungeon of Victoria Island? **- Sentinel**'
+    embed4 = discord.Embed(color = discord.Colour.blue())
+    embed4.title = 'Set 3'
+    embed4.description = '1. Which NPC does not belong to Alpha Platoon\'s Network of Communication? **- Peter**\n2. Which material is not required to awaken Hero\'s Gladius? **- Fairy Wing**\n3. Which NPC cannot be seen in Kerning City? **- Luke**\n4. Which of following monsters has the WRONG item? **- Nependeath - Nependeath\'s Leaf**\n5. Which of the following monsters can fly? **- Malady**'
+    embed5 = discord.Embed(color = discord.Colour.blue())
+    embed5.title = 'Set 4'
+    embed5.description = '1. When you get hit by a monster, which of following is not fully explained? **- Weaken: Decrease Movement Speed**\n2. Which of the following NPCs will NOT be found in Orbis? **- Sophia**\n3. Which of following is the highest level quest? **- Alcaster and the Dark Crystal**\n4. Which of following NPC is not related to item synthesis/refine? **- Shane**\n5. Which of following potions has the CORRECT information? **- Pizza: Recover 400 HP**'
+    embed6 = discord.Embed(color = discord.Colour.blue())
+    embed6.title = 'Set 5'
+    embed6.description = '1. Who is the first NPC you meet in Maple Island? **- Sera**\n2. In MapleStory, what EXP is needed to level up from Lv1 to Lv2? **- 15 EXP**\n3. Which NPC cannot be seen in El Nath Snowfield? **- Elma the Housekeeper**\n4. Which of these jobs will you NOT get after 2ND job advancement? **- Mage/Outlaw or select any except 2nd Job**\n5. Which of following quests can be repeated? **- Arwen and the Glass Shoe**'
+    embed7 = discord.Embed(color = discord.Colour.blue())
+    embed7.title = 'Set 6'
+    embed7.description = '1. Which of following monsters has the CORRECT item corresponding to the monster? **- Stirge: Stirge\'s Wing**\n2. Which NPC cannot be seen in Perion? **- Francis**\n3. In Kerning City, who is the father of Alex, the runaway kid? **- Chief Stan**\n4. What do you receive in return for giving 30 Dark Marbles to the 2nd job advancement NPC? **Proof of Hero**\n5. For the 1st job advancement, which job fully states the job advancement requirement? **- Bowman 25 DEX**'
+    message = await ctx.send(embed = embed1)
+    pages = []
+    pages.append(embed1)
+    pages.append(embed2)
+    pages.append(embed3)
+    pages.append(embed4)
+    pages.append(embed5)
+    pages.append(embed6)
+    pages.append(embed7)
+    pageCount = 6
+    await message.add_reaction('⏮')
+    await message.add_reaction('◀')
+    await message.add_reaction('▶')
+    await message.add_reaction('⏭')
+    def check(reaction, user):
+            return user == ctx.author
+
+    i = 0
+    reaction = None
+    while True:
+        if str(reaction) == '⏮':
+            i = 0
+            await message.edit(embed = pages[i])
+        elif str(reaction) == '◀':
+            if i > 0:
+                i -= 1
+                await message.edit(embed = pages[i])
+        elif str(reaction) == '▶':
+            if i < pageCount:
+                i += 1
+                await message.edit(embed = pages[i])
+        elif str(reaction) == '⏭':
+            i = pageCount
+            await message.edit(embed = pages[i])
+        
+        try:
+            reaction, user = await bot.wait_for('reaction_add', timeout = 30.0, check = check)
+            await message.remove_reaction(reaction, user)
+        except:
+            break
+
+    await message.clear_reactions() 
+
+@bot.command(name = 'directory', help = 'Directory for Forums and Guides')
+async def directory(ctx):
+    embed1 = discord.Embed(color = discord.Colour.blue())
+    embed1.title = 'Forums'
+    embed1.description = '''[Guide Directory by Succubus](https://mapleroyals.com/forum/threads/%C2%BB-guide-directory-%C2%AB.29219/)
+
+    [MapleRoyals Game Terms and Conditions](https://mapleroyals.com/forum/threads/mapleroyals-game-terms-conditions.86769/)
+    [MapleRoyals Forum Rules and Regulations](https://mapleroyals.com/forum/threads/mapleroyals-forum-rules-regulations.96970/)
+    
+    [Community Blacklist](https://mapleroyals.com/forum/threads/community-blacklist.166479/)
+    [Voting Page](https://mapleroyals.com/?page=vote)
+    [Monster Drop Table Website by Shanmango](https://royals-drops.herokuapp.com/#/)
+    
+    [A Guide to Maple Royals by Katsuruka](https://mapleroyals.com/forum/threads/a-guide-to-maple-royals.8814/)
+
+    Job guides on next page
+    '''
+    embed2 = discord.Embed(color = discord.Colour.blue())
+    embed2.title = 'Player-Made Job Guides'
+    embed2.description = '''[Job Selecting Guide by Succubus](https://mapleroyals.com/forum/threads/cant-decide-which-class-to-play-on-mapleroyals.28827/)
+    [Hero Guide by Plenty](https://mapleroyals.com/forum/threads/hero-guide.57080/)
+    [Dark Knight Guide by Mrkaren](https://mapleroyals.com/forum/threads/no-longer-updated-into-darkness-dark-knight-guide.131788/)
+    [Paladin Guide by Haplopelma](https://mapleroyals.com/forum/threads/comprehensive-paladin-guide-haplopelma.161247/)
+    
+    [Bowmaster Guide by Nany625](https://mapleroyals.com/forum/threads/new-source-nanys-bowmaster-guide-road-to-lord-sniper.121936/)
+    [Marksman Guide by Evan](https://mapleroyals.com/forum/threads/a-comprehensive-guide-to-marksman.89785/)
+
+    [Bishop Guide by Jooon](https://mapleroyals.com/forum/threads/bishops-guide-2022-horntail-guide.125406/)
+    [Fire/Poison Mage Guide by GoodDoodoo](https://mapleroyals.com/forum/threads/the-best-fire-poison-guide-there-was-is-and-ever-will-be.27168/)
+    [Ice/Lightning Mage Guide by PalmTree](https://mapleroyals.com/forum/threads/a-new-adventure-begins-a-comprehensive-ice-lightning-guide.51505/)
+    
+    [Night Lord Guide by Sila](https://mapleroyals.com/forum/threads/a-comprehensive-night-lord-guide.23303/)
+    [Shadower Guide by Incentv](https://mapleroyals.com/forum/threads/quokkas-shadower-guide-2020.180490/)
+
+    [Buccaneer Guide by Donn1e](https://mapleroyals.com/forum/threads/donn1es-2021-buccaneer-guide.188641/)
+    [Corsair Guide by Nemo](https://mapleroyals.com/forum/threads/a-comprehensive-corsair-guide.122934/)
+    [Corsair Bossing Guides by Officially](https://mapleroyals.com/forum/threads/corsairs-bossing-guides-full-record-included.197220/)
+    
+    PQ/Prequest guides on next page
+    '''
+    embed3 = discord.Embed(color = discord.Colour.blue())
+    embed3.title = 'Party Quest Guides'
+    embed3.description = '''[Henesys Party Quest Guide by Succubus](https://mapleroyals.com/forum/threads/henesys-party-quest.48012/)
+    [Ludibrium Party Quest Guide by Devastated](https://mapleroyals.com/forum/threads/ludibrium-party-quest-lpq-guide.108791/)
+    [Ludibrium Maze Party Quest Guide by Succubus](https://mapleroyals.com/forum/threads/ludibrium-maze-party-quest.47768/)
+    [Orbis PQ Guide by Rinn](https://mapleroyals.com/forum/threads/orbis-pq-guide.174277/)
+    [Romeo and Juliet Party Quest Guide by IncentV](https://mapleroyals.com/forum/threads/romeo-juliet-party-quest-rjpq-guide-under-construction.174168/)    
+    [Ellin Forest Questline by quaxko](https://mapleroyals.com/forum/threads/in-depth-ellin-forest-questline.184196/)
+    [Ellin Party Quest Guide by Jooon](https://mapleroyals.com/forum/threads/ellin-forest-party-quest-guide-epq.185329/)
+    [Crimsonwood Party Quest and Prequest Guide by Labour](https://mapleroyals.com/forum/threads/crimsonwood-party-quest-prequisite-guide-2020-cwpq.153541/)
+    [Amoria Party Quest Guide by Aelyssia](https://mapleroyals.com/forum/threads/comprehensive-apq-guide-updated-feb-2021.172942/)
+    [Guild Party Quest Guide by bibz](https://mapleroyals.com/forum/threads/gpq-guide-2021-revamped.199116/)
+
+    Bossing related guides on next page
+    '''
+    embed4 = discord.Embed(color = discord.Colour.blue())
+    embed4.title = 'Bossing Related Guides'
+    embed4.description = '''[Crimsonwood Party Quest and Prequest Guide by Labour](https://mapleroyals.com/forum/threads/crimsonwood-party-quest-prequisite-guide-2020-cwpq.153541/)
+    [Buying Zhelm Guide by Inusama](https://mapleroyals.com/forum/threads/buying-zhelm-guide.96487/)
+    [Zakum Jump Quest Guide by Succubus](https://mapleroyals.com/forum/threads/zakum-jump-quest.33977/)
+    [Zakum Prequest Guide by Christine](https://mapleroyals.com/forum/threads/zakum-prerequisite-guide.10723/)
+    [Krexel Prequest Guide by Sila](https://mapleroyals.com/forum/threads/guide-to-krexels-pre-quests.16203/)
+    [Wulin Yaosen Prequest Guide by Goku](https://mapleroyals.com/forum/threads/wulin-yaoseng-pre-quests-guide.125187/)    
+    [Horntail Party Quest and Bossing Guide by Matt](https://mapleroyals.com/forum/threads/horntail-party-quest-bossing-guide.6152/)
+    [Horntail Seduce Target/Bishop Guide by Al3x](https://mapleroyals.com/forum/threads/horntail-guide-for-seduce-target-and-bishops.123712/)    
+    [Neo Tokyo Guide by Jooon](https://mapleroyals.com/forum/threads/guide-to-neo-tokyo.146864/)
+    [All Bosses Guide by Matt](https://mapleroyals.com/forum/threads/all-bosses-in-mapleroyals.380/)
+    [Common Boss Info Guide by Piffy](https://mapleroyals.com/forum/threads/common-big-bosses-info-how-much-hp-to-tank.129971/)
+   
+    Other guides on next page
+    '''
+    embed5 = discord.Embed(color = discord.Colour.blue())
+    embed5.title = 'More Guides'
+    embed5.description = '''**HP Related**
+    [HP Washing Guide Optimized by Pheelo](https://mapleroyals.com/forum/threads/fully-revised-hp-washing-guide.8286/)
+    [MP Washing Guide by jmmainvi](https://mapleroyals.com/forum/threads/how-to-mp-wash-double-wash.18158/)
+    [Search for the Elixir of Life (HP Quest) Guide by Nivi](https://mapleroyals.com/forum/threads/comprehensive-search-for-the-elixir-of-life-reuel-hp-quest-guide-lv120.178648/)
+    [HP Washing Alternatives Guide by ilyssia](https://mapleroyals.com/forum/threads/hp-washing-alternatives.174045/)    
+    [Water From the Spring of Youth Guide by Kai](https://mapleroyals.com/forum/threads/water-from-the-spring-of-youth.124038/)
+    [Night Lord/Shadower HP Washing Above 20k HP Guide by PerfectSin](https://mapleroyals.com/forum/threads/night-lord-shadower-hp-washing-above-20k-hp.146816/)
+
+    **Mobs/Quests/Progressions**
+    [2022 Leveling Guide by Becca](https://mapleroyals.com/forum/threads/2022-leveling-guide.157840/)
+    [Leeching Guide by Jooon](https://mapleroyals.com/forum/threads/leeching-guide-updated-2021.145533/)
+    [Monster Book Guide by Becca](https://mapleroyals.com/forum/threads/monster-book-guide.137657/)
+    [Quest Specialist Guide by Inusama](https://mapleroyals.com/forum/threads/quest-specialist-guide-hidden-and-missable-quests.109922/)
+    [Job Advancement Guide by Devastated](https://mapleroyals.com/forum/threads/new-source-job-advancement-guide.110142/)
+    [4th Job Skill/Mastery Book Guide by Plenty and Zancks](https://mapleroyals.com/forum/threads/4th-job-skill-mastery-book-guide.16552/)
+
+    **Gacha/Crafting**
+    [Gachapon Guide by Kibito](https://mapleroyals.com/forum/threads/lets-play-gachapon.110983/)
+    [ITCG Crafting Guide by Sila](https://mapleroyals.com/forum/threads/new-itcg-crafting-guide-2017.89997/)
+    [Dragon Weapon Crafting Guide by Lemur](https://mapleroyals.com/forum/threads/lemurs-dragon-weapons-crafting-guide.33654/)
+    [Eraser Quest Guide by Inusama](https://mapleroyals.com/forum/threads/eraser-quest-guide.128860/)
+
+    **Other**
+    [MapleRoyals' XP Table by Plenty](https://mapleroyals.com/forum/threads/xp-table.16611/)
+    [Godly Items Explained by Matt](https://mapleroyals.com/forum/threads/godly-items-explained.1312/)
+    [End Game Weapons Guide by Plenty](https://mapleroyals.com/forum/threads/end-game-weapons.15246/)
+    [Maple Weapon Drop List by Inusama](https://mapleroyals.com/forum/threads/new-source-maple-weapon-drop-list.121173/)
+    [1 Hit Magic Calculator by Shiyui](https://docs.google.com/spreadsheets/d/1qP_StAraLKVU7QiYUvTRaCPEpRiGslcxlkx0zZs_-so/edit#gid=409157846)
+    [Pet Quests Guide by HarGao](https://mapleroyals.com/forum/threads/pet-quests-guide.135372/)
+    [New Source Mount Guide by Martin](https://mapleroyals.com/forum/threads/new-source-mount-guide.91620/)
+    [Ludibrium Clocktower Directory by xcandyheart](https://mapleroyals.com/forum/threads/ludibrium-clocktower-directory.189379/)
+    [Hairstyle and Face Guide by PalmTree](https://mapleroyals.com/forum/threads/new-updated-hairstyle-face-guide.103461/)
+    [Multi-Attacking Guide by onekeystory](https://mapleroyals.com/forum/threads/comprehensive-guide-on-how-to-multi-attacking.195315/)
+    [Donator Chairs Guide by Tim](https://mapleroyals.com/forum/threads/donator-chairs.28573/)
+    [Phantom Forest Navigation Guide by Gillies](https://mapleroyals.com/forum/threads/phantom-forest-basic-navigation-for-clueless-people.126167/)
+    '''
+
+    message = await ctx.send(embed = embed1)
+    pages = []
+    pages.append(embed1)
+    pages.append(embed2)
+    pages.append(embed3)
+    pages.append(embed4)
+    pages.append(embed5)
+    pageCount = 4
+    await message.add_reaction('⏮')
+    await message.add_reaction('◀')
+    await message.add_reaction('▶')
+    await message.add_reaction('⏭')
+    def check(reaction, user):
+            return user == ctx.author
+
+    i = 0
+    reaction = None
+    while True:
+        if str(reaction) == '⏮':
+            i = 0
+            await message.edit(embed = pages[i])
+        elif str(reaction) == '◀':
+            if i > 0:
+                i -= 1
+                await message.edit(embed = pages[i])
+        elif str(reaction) == '▶':
+            if i < pageCount:
+                i += 1
+                await message.edit(embed = pages[i])
+        elif str(reaction) == '⏭':
+            i = pageCount
+            await message.edit(embed = pages[i])
+        
+        try:
+            reaction, user = await bot.wait_for('reaction_add', timeout = 120.0, check = check)
             await message.remove_reaction(reaction, user)
         except:
             break
@@ -275,29 +703,6 @@ async def cs(ctx, *argv: int):
 
 @bot.command(name = 'csp', help = 'Simulates a successful chaos scroll')
 async def csp(ctx, *argv: int):
-    P5 = 0.99
-    P4 = 1.98
-    P3 = 10.21
-    P2 = 15.87
-    P1 = 19.31
-    P0 = 18.38
-    P_1 = 13.70
-    P_2 = 8.00
-    P_3 = 3.65
-    P_4 = 2.97
-    P_5 = 4.94
-
-    R5 = P5
-    R4 = R5 + P4
-    R3 = R4 + P3
-    R2 = R3 + P2
-    R1 = R2 + P1
-    R0 = R1 + P0
-    R_1 = R0 + P_1
-    R_2 = R_1 + P_2
-    R_3 = R_2 + P_3
-    R_4 = R_3 + P_4
-    R_5 = R_4 + P_5
     stats = ''
     cses = ''
     
@@ -331,7 +736,18 @@ async def csp(ctx, *argv: int):
 async def servertime(ctx):
     serverTime=time.gmtime()
     await ctx.send(f'The current time is: {time.strftime("%H:%M:%S", serverTime)}')
-    
+
+# Roll
+@bot.command(name = 'roll', help = "Rolls a dice give the number of sides")
+async def roll(ctx, sides: int):
+    choice = random.randint(1,sides)
+    await ctx.send(choice)
+
+# Coin Flip
+@bot.command(name = 'coinflip', help = "Flips a 2 sided coin")
+async def coinflip(ctx):
+    choice = random.choice(["Heads","Tails"])
+    await ctx.send(choice)    
 
 ####################################################################################
 
@@ -407,7 +823,7 @@ async def hpquest(ctx):
 
 
 # CWK GUIDE
-@bot.command(name='cwkguide', help='Displays CWK Guide')
+@bot.command(aliases=['cwk'], help='Displays CWK Guide')
 async def cwkguide(ctx):
     embed = discord.Embed(color = discord.Colour.blue())
     embed.description = 'https://mapleroyals.com/forum/threads/crimsonwood-party-quest-prequisite-guide-2020-cwpq.153541/'
@@ -415,7 +831,7 @@ async def cwkguide(ctx):
     await ctx.send(embed=embed, file=discord.File(dir_path+'/cwk.png'))
 
 # GPQ GUIDE
-@bot.command(name='gpqguide', help='Displays GPQ Guide')
+@bot.command(aliases=['gpq'], help='Displays GPQ Guide')
 async def gpqguide(ctx):
     embed = discord.Embed(color = discord.Colour.blue())
     embed.description = 'https://mapleroyals.com/forum/threads/gpq-guide-2021-revamped.199116/'
@@ -423,19 +839,55 @@ async def gpqguide(ctx):
     await ctx.send(embed=embed, file=discord.File(dir_path+'/gpqguide.png'))
 
 # APQ GUIDE
-@bot.command(name = 'apqguide',help='Displays APQ Guide')
+@bot.command(aliases = ['apq'],help='Displays APQ Guide')
 async def apqguide(ctx):
     embed = discord.Embed(color = discord.Colour.blue())
     embed.description = 'https://mapleroyals.com/forum/threads/comprehensive-apq-guide-updated-feb-2021.172942/'
     await ctx.send(embed=embed, file=discord.File(dir_path+'/apq.png'))
 
-# OPQ GUIDE
-@bot.command(name = 'opqguide',help='Displays OPQ Guide')
-async def apqguide(ctx):
+# KPQ Guide
+@bot.command(aliases = ['kpq'], help = 'Solutions to KPQ Stage 1 Questions')
+async def kpqguide(ctx):
     embed = discord.Embed(color = discord.Colour.blue())
-    embed.description = 'https://mapleroyals.com/forum/threads/orbis-pq-guide.174277/'
-    await ctx.send(embed=embed, file=discord.File(dir_path+'/apq.png'))
+    embed.description = 'Level needed to become a Magician: **8**\nLevel needed to become Warrior, Bowman, Thief, or Pirate: **10**\nINT needed to become a Magician: **20**\nDEX needed to become a Pirate: **20**\nDEX needed to become a Thief or Bowman: **25**\nLevel required to advance to 2nd Job: **30**\nSTR needed to become a Warrior: **35**'
+    await ctx.send(embed = embed)
+
+# OPQ GUIDE
+@bot.command(aliases = ['opq'],help='Displays OPQ Guide')
+async def opqguide(ctx):
+    embed = discord.Embed()
+    file1 = discord.File(dir_path+'/opq.png', filename = 'opq.png')
+    embed.set_thumbnail(url="attachment://opq.png")
+    # Get day of the week
+    dayInt = datetime.today().weekday()
+
+    if dayInt == 0:
+        disc = "Orange (Cute)"
+    elif dayInt == 1:
+        disc = "Yellow (Scary)"
+    elif dayInt == 2:
+        disc = "Purple (Fun)"
+    elif dayInt == 3:
+        disc = "Dark Blue (Sad)"
+    elif dayInt == 4:
+        disc = "Light Blue (Cold)"
+    elif dayInt == 5:
+        disc = "Green (Tight)"
+    elif dayInt == 6:
+        disc = "Red (Operatic)"
+    embed.description = f'https://mapleroyals.com/forum/threads/orbis-pq-guide.174277/\nCD color today: {disc}\nStage 4 (Storage) Combo: 1 > 10 > 9 > 13 > 11 > 6 > 12 > 2 > 5 > 15 > 8 > 4 > 7 > 3 > 14 (count from bottom)'
+    await ctx.send(file=discord.File(dir_path+'/apq.png'))
+    await ctx.send(embed=embed, file = file1)
     
+# PRICE GUIDE
+@bot.command(name = 'priceguide',help='Displays link to Price Guide by OneTwoTree')
+async def priceguide(ctx):
+    embed = discord.Embed(color = discord.Colour.blue())
+    file = discord.File(dir_path+'/123guide.png', filename = '123image.png')
+    embed.title = 'OneTwoTree\'s Price Guide'
+    embed.description = 'https://docs.google.com/spreadsheets/d/1V-JsbmQ3s-5AeQ15hJKQUiBBejFPx6T3nm3PK8HIcfU/edit#gid=1469380474'
+    embed.set_thumbnail(url="attachment://123image.png")
+    await ctx.send(embed=embed, file = file)
 
 # HP Washing Info
 @bot.command(name='HPwashInfo', help = 'Displays info for HP Washing')
@@ -1012,6 +1464,8 @@ async def craft(ctx, *args):
         ing = 'Dragon Green Sleeve\nClaw Production Stimulator\n1 Red Craven\n20 Dragon Spirit\n25 Dragon Scale\n2 DEX Crystal\n6 LUK Crystal\n120,000 mesos'
     elif item.lower() == 'dragon slash claw' or item.lower() == 'dsc':
         ing = 'Dragon Slash Claw\nKnuckle Production Stimulator\n1 King Cent\n5 Mithril Plate\n20 Dragon Spirit\n20 Dragon Scale\n3 Wisdom Crystal\n120,000 mesos'
+    elif item.lower() == 'dragon revolver':
+        ing = 'Dragon Revolver\nGun Production Stimulator\n1 Concerto\n5 Adamantium Plate\n20 Dragon Spirit\n20 Dragon Scale\n3 Power Crystal\n120,000 mesos'
     elif item.lower() == 'magic throwing knife' or item.lower() == 'mtk':
         ing = 'Magic Throwing Knife\nWiseman Stone: Sealed Wiseman Stone, 200 Silver Coins\nNano Plant (Omega)\nNano Plant (Sigma)\nNano Plant (Y)\n1 Ilbi Throwing-Stars\n800 Silver Coins\n500m mesos'
     elif item.lower() == 'armor-piercing bullet' or item.lower() == 'armor piercing bullet' or item.lower() == 'apb':
@@ -1108,6 +1562,451 @@ async def dummy(ctx, scrolls: int):
         return
     await ctx.send(file = discord.File('scrollfailed.gif'))
     await ctx.send(f'You have failed all your dummies')
+
+@bot.command(name = 'dummy30', help = 'Simulates a series of dummy 30%% scrolls')
+async def dummy(ctx, scrolls: int):
+    passes = 0
+    fails = 0
+    attempts = ''
+    rate = ''
+    counter = 1
+    # if scrolls:
+    for i in range(scrolls):
+        pf = round(random.random(),2)
+        if pf < 0.30:
+            passes = passes + 1
+            attempts = attempts + str(i+1) + '   '
+            if passes == scrolls/10:
+                finalPass = passes
+                finalAttempt = i+1
+            rate = rate + str(passes) + '/' + str(counter) + '   '
+            counter = 0
+        else:
+            fails = fails + 1
+        counter = counter + 1
+
+
+    if passes > 1:
+        await ctx.send(file = discord.File('scrollpassed.gif'))
+        await ctx.send(f'You have passed {passes} out of {scrolls} dummies.\nYou passed on attempts:    {attempts}\nYour rates are: {rate}')
+        if passes >= scrolls/3.33:
+            await ctx.send(f'You passed {finalPass} scroll(s) after {finalAttempt} tries.')
+        return
+    await ctx.send(file = discord.File('scrollfailed.gif'))
+    await ctx.send(f'You have failed all your dummies')
+
+@bot.command(name = 'maple', help = 'Plays Wordle with words used in MapleRoyals')
+async def maple(ctx):
+
+    greenLetters = ['<:Wordle_0026_Layer61:973666167719878656>',
+        '<:Wordle_0025_Layer62:973666167627603969>',
+        '<:Wordle_0024_Layer63:973666167677911151>',
+        '<:Wordle_0023_Layer64:973666167585660938>',
+        '<:Wordle_0022_Layer65:973666167606640730>',
+        '<:Wordle_0021_Layer66:973666167577268254>',
+        '<:Wordle_0020_Layer67:973666167564693554>',
+        '<:Wordle_0019_Layer68:973666167577264198>',
+        '<:Wordle_0018_Layer69:973666167451418694>',
+        '<:Wordle_0017_Layer70:973666167510138980>',
+        '<:Wordle_0016_Layer71:973666167912812544>',
+        '<:Wordle_0015_Layer72:973666167401107496>',
+        '<:Wordle_0014_Layer73:973666167401119744>',
+        '<:Wordle_0013_Layer74:973666167451451392>',
+        '<:Wordle_0012_Layer75:973666167375929385>',
+        '<:Wordle_0011_Layer76:973666167451439134>',
+        '<:Wordle_0010_Layer77:973666167287848980>',
+        '<:Wordle_0009_Layer78:973666167459831908>',
+        '<:Wordle_0008_Layer79:973666167292055622>',
+        '<:Wordle_0007_Layer80:973666167212347402>',
+        '<:Wordle_0006_Layer81:973666167170400277>',
+        '<:Wordle_0005_Layer82:973666167241736222>',
+        '<:Wordle_0004_Layer83:973666166943924305>',
+        '<:Wordle_0003_Layer84:973666167136874567>',
+        '<:Wordle_0002_Layer85:973666167191375872>',
+        '<:Wordle_0001_Layer86:973666167136866334>'
+    ]
+
+    yellowLetters = [
+        '<:Wordle_0052_Layer35:974145532702371881>',
+        '<:Wordle_0051_Layer36:974145532807225354>',
+        '<:Wordle_0050_Layer37:974145532786270238>',
+        '<:Wordle_0049_Layer38:974145532840796160>',
+        '<:Wordle_0048_Layer39:974145532803043358>',
+        '<:Wordle_0047_Layer40:974145532513624156>',
+        '<:Wordle_0046_Layer41:974145532643659796>',
+        '<:Wordle_0045_Layer42:974145532610101308>',
+        '<:Wordle_0044_Layer43:974145532488462376>',
+        '<:Wordle_0043_Layer44:974145532408786984>',
+        '<:Wordle_0042_Layer45:974145532484276254>',
+        '<:Wordle_0041_Layer46:974145532329099274>',
+        '<:Wordle_0040_Layer47:974145532480081940>',
+        '<:Wordle_0039_Layer48:974145532320677898>',
+        '<:Wordle_0038_Layer49:974145532366815302>',
+        '<:Wordle_0037_Layer50:974145532308094976>',
+        '<:Wordle_0036_Layer51:974145532278734858>',
+        '<:Wordle_0035_Layer52:974145532173897728>',
+        '<:Wordle_0034_Layer53:974145532119363614>',
+        '<:Wordle_0033_Layer54:974145532157100124>',
+        '<:Wordle_0032_Layer55:974145532077428756>',
+        '<:Wordle_0031_Layer56:974145532064841769>',
+        '<:Wordle_0030_Layer57:974145532241010779>',
+        '<:Wordle_0029_Layer58:974145532085813308>',
+        '<:Wordle_0028_Layer59:974145531993522186>',
+        '<:Wordle_0027_Layer60:974145532031295500>'
+    ]
+
+    greyLetters = [
+        '<:Grey_0025_Layer1:974749494992330802>',
+        '<:Grey_0024_Layer3:974749494950391829>',
+        '<:Grey_0023_Layer4:974749495260741652>',
+        '<:Grey_0022_Layer5:974749495059423295>',
+        '<:Grey_0021_Layer6:974749494614847509>',
+        '<:Grey_0020_Layer7:974749494971359252>',
+        '<:Grey_0019_Layer8:974749494862286878>',
+        '<:Grey_0018_Layer9:974749494891647006>',
+        '<:Grey_0017_Layer10:974749495092981840>',
+        '<:Grey_0016_Layer11:974749494526763059>',
+        '<:Grey_0015_Layer12:974749494895837265>',
+        '<:Grey_0014_Layer13:974749494858100766>',
+        '<:Grey_0013_Layer14:974749494786809886>',
+        '<:Grey_0012_Layer15:974749494849720400>',
+        '<:Grey_0011_Layer16:974749494795186176>',
+        '<:Grey_0010_Layer17:974749495021678632>',
+        '<:Grey_0009_Layer18:974749494736461874>',
+        '<:Grey_0008_Layer19:974749494757441616>',
+        '<:Grey_0007_Layer20:974749494749061170>',
+        '<:Grey_0006_Layer21:974749494681944105>',
+        '<:Grey_0005_Layer22:974749494673563668>',
+        '<:Grey_0004_Layer23:974749494828748812>',
+        '<:Grey_0003_Layer24:974749494728065024>',
+        '<:Grey_0002_Layer25:974749494648381521>',
+        '<:Grey_0001_Layer26:974753136470270022>',
+        '<:Grey_0000_Layer27:974753136755490856>'
+    ]
+
+    emojiBank = ['🇦', '🇧', '🇨',  '🇩',  '🇪',  '🇫',  '🇬',  '🇭',  '🇮',  '🇯',  '🇰',  '🇱',  '🇲',  '🇳',  '🇴',  '🇵',  '🇶',  '🇷',  '🇸',  '🇹',  '🇺',  '🇻',  '🇼',  '🇽',  '🇾',  '🇿']
+    letterBank = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
+    qwertyBank = ['🇶', '🇼', '🇪', '🇷', '🇹', '🇾', '🇺', '🇮', '🇴', '🇵', '\n', '🇦', '🇸', '🇩', '🇫', '🇬', '🇭', '🇯', '🇰', '🇱', '\n    ', '🇿', '🇽', '🇨', '🇻', '🇧', '🇳', '🇲']
+        
+
+    # Generate random word from wew.txt
+    gamechannel = ctx.channel
+    word = random.choice(open("mapleAnswerList.txt").read().split())
+    # word = random.choice(open("guesseslist.txt").read().split())
+    # word = 'titan'
+    wordL = [char for char in word]
+    
+    guessList = open('guesseslist.txt').read().split()
+    
+    # Introduction + rules
+    await ctx.send('Welcome to MAPLE!\nGuess the 5-letter word in 6 tries. Each guess must be a valid 5-letter word in the English dictionary or in MapleRoyals. After each guess, the color of the tiles will change to show how close your guess was to the word.\n🟩 = Letter is in the word and in the correct spot.\n🟨 = Letter is in the word but in the wrong spot.\n⬛ = Letter is not in the word in any spot.\n Please enter your 5-letter word guess. You may type \"end\" to end the game early.')
+    count = 0
+    win = False
+    usedLetters = []
+    while count < 6:
+
+        def check(m):
+            return m.channel == gamechannel
+        try:
+            msg = await bot.wait_for('message', timeout=300, check = check)
+        except asyncio.TimeoutError:
+            await ctx.send(f'Exiting due to 5 minutes of inactivity.\nThe correct answer was **{word}**')
+            return
+        msgL = [char for char in str(msg.content).lower()]
+        if (msg.author.bot):
+            continue
+        if str(msg.content) == 'end':
+            await ctx.send(f'Game Over\nThe correct answer was **{word}**')
+            return
+        if str(msg.content) == '~maple':
+            await ctx.send('Ending this session')
+            return
+        if not str(msg.content).isalpha():
+            await ctx.send('Only letters are allowed!', delete_after=2)
+            continue
+        if len(str(msg.content)) != 5:
+            await ctx.send('Please enter a 5-letter word.', delete_after=2)
+            continue
+        if str(msg.content).lower() not in guessList:
+            await ctx.send('Please use a valid word', delete_after=2)
+            continue
+
+
+        # Display your guess
+        m = []
+        for letter in msgL:
+            if letter not in usedLetters:
+                usedLetters.append(letter)
+                usedLetters.sort()
+            
+            whereLetter = letterBank.index(letter.upper())
+            emojiLetter = emojiBank[whereLetter]
+            m.append(emojiLetter)
+        botReply = await ctx.send(" ".join(m))
+        
+
+        response = [None]*5
+        winCount = 0
+        # Check Greens
+        
+        wordL = [char for char in word]
+        greenLCheck = wordL
+        
+        for i, letter in enumerate(msgL):
+            whereLetter = letterBank.index(letter.upper())
+            if msgL[i] == wordL[i]:
+                greenLCheck[i] = '_'
+                response[i] = greenLetters[whereLetter]
+                msgL[i] = '.'
+                winCount = winCount + 1
+        
+        # Check Yellows
+        for j, letter in enumerate(msgL):
+            try:
+                whereLetter = letterBank.index(letter.upper())
+            except ValueError:
+                pass
+            if letter in greenLCheck:
+                
+                whereL = greenLCheck.index(letter)
+                greenLCheck[whereL] = '_'
+                if response[j] == None:
+                    response[j] = yellowLetters[whereLetter]
+
+            elif response[j] == None:
+                response[j] = greyLetters[whereLetter]
+        
+        
+        count = count + 1
+
+        
+
+        await asyncio.sleep(1)
+
+        # Animate checking each letter
+        for ii, symbol in enumerate(response):
+            m[ii] = symbol
+            await botReply.edit(content = " ".join(m))
+            await asyncio.sleep(0.5)
+
+        # Check win
+        if winCount == 5:
+            win = True
+            break
+        else:
+            winCount = 0
+
+        # Display attemp and remaining letters
+        for letter in usedLetters:
+            filterLetter = letterBank.index(letter.upper())
+            filterEmoji = emojiBank[filterLetter]
+            greyEmoji = greyLetters[filterLetter]
+            try:
+                qwertyIndexFilter = qwertyBank.index(filterEmoji)
+                qwertyBank[qwertyIndexFilter] = greyEmoji
+            except ValueError:
+                pass
+        await ctx.send(f'**Attempt: {count} **' + '\n' + " ".join(qwertyBank))
+                
+    if win == True:
+        if count == 1:
+            await ctx.send(f'You won in {count} attempt!')
+        else:
+            await ctx.send(f'You won in {count} attempts!')
+    else:
+        await ctx.send(f'Better luck next time.\nThe correct answer was **{word}**')
+
+
+@bot.command(aliases = ['wtr'], help = 'Play who''s that pokemon? MapleRoyals Edition')
+async def whosthatroyalmon(ctx):
+    def displayAnswer():
+        
+        try: 
+            asset = Image.open(dir_path+'/mobs/'+mobName+'.gif')
+        except FileNotFoundError:
+            print('Missed: '+mobName)
+        
+        asset = ImageSequence.Iterator(asset)[0]
+        asset = asset.convert('RGBA')
+        asset = asset.copy()
+        asset = ImageOps.contain(asset, (250,250))
+        bg = Image.open(dir_path + '/Pokemon.png')
+        bgg = ImageDraw.Draw(bg)
+        font = ImageFont.truetype("COMIC.TTF", size = 30)
+        bgg.text((480,500),f'{mobChoose.upper()} SOUNDS', fill = 'white',font = font,stroke_width = 2, stroke_fill='black', anchor = "mm")
+        bg.paste(asset, (int(180),int(230)), asset)
+        bg.save('wtp.png')
+        
+        return
+
+    mobList = []
+    f = open(dir_path+"/mobs.json","r", encoding = "utf-8")
+    data = json.load(f)
+    f.close()
+    for detail in data:
+        mobList.append(str(detail["name"]))
+    mobChoose = random.choice(mobList)
+    mobName = mobChoose.replace(" ","").lower()
+
+    try:
+        File=discord.File(dir_path+'/mobs/'+mobName+'.gif')
+    except FileNotFoundError:
+        await ctx.send(f"{mobName} is not in the database.")
+        return
+    
+
+    # await ctx.send(file=discord.File(dir_path+'/mobs/'+mobName+'.gif'))
+    
+    try: 
+        asset = Image.open(dir_path+'/mobs/'+mobName+'.gif')
+    except FileNotFoundError:
+        print('Missed: '+mobName)
+    
+    asset = ImageSequence.Iterator(asset)[0]
+    asset = asset.convert('RGBA')
+    asset = asset.copy()
+    asset = ImageOps.contain(asset, (250,250))
+    bg = Image.open(dir_path + '/Pokemon.png')
+    bg.paste((0,81,155), (180,230), asset)
+
+    bg.save('wtp.png')
+    
+    await ctx.send(file = discord.File(dir_path+"/wtp.png"))
+
+    gamechannel = ctx.channel
+        
+    # Introduction + rules
+    await ctx.send('Who\'s that Royalmon? Try and guess the mystery mob found in MapleRoyals! To make a guess, you must preface your answer with \"wtr\".\nExample: wtr snail\nYou may type "list" to see the list of mobs.\nYou can search for a mob by typing \"search ____\".')
+    count = 0
+    while count < 6:
+
+        def check(m):
+            return m.channel == gamechannel
+        try:
+            msg = await bot.wait_for('message', timeout=300, check = check)
+        except asyncio.TimeoutError:
+            await ctx.send(f'Exiting due to 5 minutes of inactivity.\nThe correct answer was **{mobChoose}**')
+            displayAnswer()
+            await ctx.send(file = discord.File(dir_path+"/wtp.png"))
+            
+            return 
+        if (msg.author.bot):
+            continue
+        if str(msg.content) == 'end':
+            await ctx.send(f'Game Over\nThe correct answer was **{mobChoose}**')
+            displayAnswer()
+            await ctx.send(file = discord.File(dir_path+"/wtp.png"))
+            return
+        if str(msg.content).startswith('~wtr'):
+            return
+        if str(msg.content) == 'list':
+            mobList = []
+            f = open(dir_path+"/mobs.json","r", encoding = "utf-8")
+            data = json.load(f)
+            f.close()
+            for detail in data:
+                mobList.append(str(detail["name"]))
+            pages = []
+            mobCount = 0
+            pageLimit = 10
+            pageCount = 1
+            while True:
+                while mobCount < pageLimit:
+                    desc = '\n'.join(mobList[mobCount:pageLimit])
+                    page = discord.Embed(title = f'Page {pageCount}', color = discord.Colour.blue())
+                    page.add_field(name = '** **', value = desc, inline = True)
+                    mobCount = pageLimit
+                    pageLimit = pageLimit + 10
+                    if mobCount >= len(mobList):
+                        pages.append(page)
+                        break
+                    desc = '\n'.join(mobList[mobCount:pageLimit])
+                    page.add_field(name = '** **', value = desc)
+                    pages.append(page)
+                    mobCount = pageLimit
+                    pageLimit = pageLimit + 10
+                    pageCount = pageCount + 1
+                    if mobCount >= len(mobList):
+                        pageCount = pageCount - 1
+                        break
+                break
+            pageCount = pageCount - 1
+            
+            message = await ctx.send(embed = pages[0])
+            await message.add_reaction('⏮')
+            await message.add_reaction('◀')
+            await message.add_reaction('▶')
+            await message.add_reaction('⏭')
+
+            def check(reaction, user):
+                return user == ctx.author
+            i = 0
+            reaction = None
+            while True:
+                if str(reaction) == '⏮':
+                    i = 0
+                    await message.edit(embed = pages[i])
+                elif str(reaction) == '◀':
+                    if i > 0:
+                        i -= 1
+                        await message.edit(embed = pages[i])
+                elif str(reaction) == '▶':
+                    if i < pageCount:
+                        i += 1
+                        await message.edit(embed = pages[i])
+                elif str(reaction) == '⏭':
+                    i = pageCount
+                    await message.edit(embed = pages[i])
+                try:
+                    reaction, user = await bot.wait_for('reaction_add', timeout = 10.0, check = check)
+                    await message.remove_reaction(reaction, user)
+                except:
+                    break
+            await message.clear_reactions()
+            continue
+        
+        
+        if str(msg.content).lower().startswith('search'):
+            searchQ = str(msg.content)[6::].strip().lower()
+            searchResult = ""
+            searchFinds = []
+            for mob in mobList:
+                if searchQ in mob.lower():
+                    searchFinds.append(mob)
+            if len(searchFinds) == 0:
+                searchResult = "There are no mobs that match your search."
+            else:
+                for find in searchFinds:
+                    searchResult = searchResult + find + ", "
+                searchResult = searchResult[0:len(searchResult)-2]
+            await ctx.send(searchResult)
+            continue
+        if not str(msg.content).lower().startswith('wtr'):
+            continue
+        
+
+        try:
+            msg = str(msg.content)[3::].replace(" ","").lower()
+        except IndexError:
+            msg = ""
+        count = count + 1
+        if (msg == mobName):
+            await ctx.send(f'You guessed it right! The Royalmon is {mobChoose}!')
+            displayAnswer()  
+            
+            await ctx.send(file = discord.File(dir_path+"/wtp.png"))
+            return
+        else:
+            await ctx.send(f'Wrong! Attempt {count} of 6')
+            continue
+    await ctx.send(f'Game Over\nThe correct answer was **{mobChoose}**')
+    try: 
+        asset = Image.open(dir_path+'/mobs/'+mobName+'.gif')
+    except FileNotFoundError:
+        print('Missed: '+mobName)
+    
+    displayAnswer()
+    await ctx.send(file = discord.File(dir_path+"/wtp.png"))
 
 # Credits
 @bot.command(name = 'credits', help = 'Lists contributors of this project')
